@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 
-// Define the shape of our cached connection
-interface MongooseCache {
+// Define the connection cache type
+type MongooseCache = {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
-}
+};
 
-// Extend the global namespace to include our mongoose cache
+// Extend the global object to include our mongoose cache
 declare global {
   // eslint-disable-next-line no-var
   var mongoose: MongooseCache | undefined;
@@ -14,14 +14,7 @@ declare global {
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
-if (!MONGODB_URI) {
-  throw new Error(
-    "Please define the MONGODB_URI environment variable inside .env.local"
-  );
-}
-
-// Initialize the cache object
-// In development, preserve the connection across module reloads caused by HMR
+// Initialize the cache on the global object to persist across hot reloads in development
 let cached: MongooseCache = global.mongoose || { conn: null, promise: null };
 
 if (!global.mongoose) {
@@ -30,9 +23,8 @@ if (!global.mongoose) {
 
 /**
  * Establishes a connection to MongoDB using Mongoose.
- * Uses a cached connection to prevent multiple connections in development.
- *
- * @returns A promise that resolves to the Mongoose instance
+ * Caches the connection to prevent multiple connections during development hot reloads.
+ * @returns Promise resolving to the Mongoose instance
  */
 async function connectDB(): Promise<typeof mongoose> {
   // Return existing connection if available
@@ -40,24 +32,33 @@ async function connectDB(): Promise<typeof mongoose> {
     return cached.conn;
   }
 
-  // Return pending connection promise if one exists
+  // Return existing connection promise if one is in progress
   if (!cached.promise) {
-    const opts = {
+    // Validate MongoDB URI exists
+    if (!MONGODB_URI) {
+      throw new Error(
+        "Please define the MONGODB_URI environment variable inside .env.local"
+      );
+    }
+    const options = {
       bufferCommands: false, // Disable Mongoose buffering
     };
 
+    // Create a new connection promise
     cached.promise = mongoose
-      .connect(MONGODB_URI as string, opts)
+      .connect(MONGODB_URI!, options)
       .then((mongoose) => {
         return mongoose;
       });
   }
 
   try {
+    // Wait for the connection to establish
     cached.conn = await cached.promise;
-  } catch (e) {
+  } catch (error) {
+    // Reset promise on error to allow retry
     cached.promise = null;
-    throw e;
+    throw error;
   }
 
   return cached.conn;
