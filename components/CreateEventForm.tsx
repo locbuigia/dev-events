@@ -50,6 +50,16 @@ const CreateEventForm = () => {
       return;
     }
 
+    if (mode && mode.length === 0) {
+      alert("Please select an event mode");
+      return;
+    }
+
+    if (tags && tags.length === 0) {
+      alert("Please select at least one event tag");
+      return;
+    }
+
     let dateOnly = null;
     let timeOnly = null;
 
@@ -69,6 +79,8 @@ const CreateEventForm = () => {
       (acc: string[], tag: { id: number; name: string }) => [...acc, tag.name],
       []
     );
+
+    console.log(mode, tags);
 
     // Create JSON payload with base64 image
     const payload = {
@@ -93,33 +105,30 @@ const CreateEventForm = () => {
       ],
       image: imagePreview, // Already base64
     };
+
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/events`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const result = await response.json();
-
-      if (response.ok) {
-        alert("Event created successfully!");
-
-        // Revalidate the events cache
-        await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/revalidate?tag=events`
-        );
-
-        // Redirect to home page
-        router.push("/");
-      } else {
-        alert(`Error: ${result.message}`);
-      }
+      //   const response = await fetch(
+      //     `${process.env.NEXT_PUBLIC_BASE_URL}/api/events`,
+      //     {
+      //       method: "POST",
+      //       headers: {
+      //         "Content-Type": "application/json",
+      //       },
+      //       body: JSON.stringify(payload),
+      //     }
+      //   );
+      //   const result = await response.json();
+      //   if (response.ok) {
+      //     alert("Event created successfully!");
+      //     // Revalidate the events cache
+      //     await fetch(
+      //       `${process.env.NEXT_PUBLIC_BASE_URL}/api/revalidate?tag=events`
+      //     );
+      //     // Redirect to home page
+      //     router.push("/");
+      //   } else {
+      //     alert(`Error: ${result.message}`);
+      //   }
     } catch (error) {
       console.error("Error creating event:", error);
       alert("Failed to create event");
@@ -151,11 +160,12 @@ const CreateEventForm = () => {
         <div className="flex flex-col gap-2">
           <label>Event name</label>
           <input
-            type="name"
+            type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter your event name"
             className="bg-dark-200 rounded-[6px] px-5 py-2.5"
+            required
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -166,6 +176,7 @@ const CreateEventForm = () => {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Enter the event description"
             className="bg-dark-200 rounded-[6px] px-5 py-2.5"
+            required
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -176,26 +187,29 @@ const CreateEventForm = () => {
             onChange={(e) => setOverview(e.target.value)}
             placeholder="Enter the event overview"
             className="bg-dark-200 rounded-[6px] px-5 py-2.5"
+            required
           />
         </div>
         <div className="flex flex-col gap-2">
           <label>Event venue</label>
           <input
-            type="name"
+            type="text"
             value={venue}
             onChange={(e) => setVenue(e.target.value)}
             placeholder="Enter the event venue"
             className="bg-dark-200 rounded-[6px] px-5 py-2.5"
+            required
           />
         </div>
         <div className="flex flex-col gap-2">
           <label>Event location</label>
           <input
-            type="name"
+            type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="Enter the event location"
             className="bg-dark-200 rounded-[6px] px-5 py-2.5"
+            required
           />
         </div>
         <div className="flex flex-col gap-2">
@@ -233,12 +247,14 @@ const CreateEventForm = () => {
             onChange={(e) => setOrganizer(e.target.value)}
             placeholder="Enter the event overview"
             className="bg-dark-200 rounded-[6px] px-5 py-2.5"
+            required
           />
         </div>
         <label>Event Mode</label>
         <Select
           className="text-black bg-gray-50 rounded-[6px] px-5 py-2.5"
           options={modeOptions}
+          values={[...mode!]}
           labelField="name"
           valueField="id"
           onChange={(value) => handleEventModeSelect(value)}
@@ -248,6 +264,7 @@ const CreateEventForm = () => {
           multi
           className="text-black bg-gray-50 rounded-[6px] px-5 py-2.5"
           options={tagOptions}
+          values={[...tags!]}
           dropdownPosition="auto"
           labelField="name"
           valueField="id"

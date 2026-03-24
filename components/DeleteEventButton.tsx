@@ -1,14 +1,16 @@
 "use client";
 
 import { deleteEventBySlug } from "@/lib/actions/event.actions";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 const DeleteEventButton = ({ slug }: { slug: string }) => {
+  const router = useRouter();
+
   const handleDeleteEvent = async () => {
     const { success } = await deleteEventBySlug(slug);
     if (success) {
       console.log("Event deleted successfully");
-      redirect("/");
+      router.push("/");
     } else {
       console.error("Delete event failed");
     }
@@ -20,7 +22,7 @@ const DeleteEventButton = ({ slug }: { slug: string }) => {
       className="mt-7 mx-auto bg-red-400 text-black font-bold"
       onClick={handleDeleteEvent}
     >
-      <a>Delete this event</a>
+      Delete this event
     </button>
   );
 };

@@ -20,7 +20,7 @@ const EventDetailItem = ({
   label: string;
 }) => {
   return (
-    <div className="flex-row-gap-2 items-center">
+    <div className="flex flex-row gap-2 items-center">
       <Image src={icon} alt={alt} width={14} height={14} />
       <p>{label}</p>
     </div>
@@ -142,7 +142,7 @@ const EventDetails = async ({ params }: { params: Promise<string> }) => {
               <p className="text-sm">Be the first to book your spot!</p>
             )}
 
-            <BookEvent eventId={_id} slug={slug} />
+            <BookEvent eventId={_id} />
           </div>
 
           <DeleteEventButton slug={slug} />
